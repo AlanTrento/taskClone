@@ -1,0 +1,58 @@
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .task-card,
+  .task-card * {
+    visibility: visible;
+  }
+
+  .task-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 20px !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .task-card-header h1 {
+    color: black !important;
+  }
+
+  .task-item {
+    border-bottom: 1px solid #ccc !important;
+    padding: 8px 0 !important;
+  }
+
+  .task-item-title {
+    color: black !important;
+  }
+
+  .task-item-description {
+    color: #666 !important;
+  }
+
+  .completed-section {
+    border-top: 1px solid #ccc !important;
+    margin-top: 16px !important;
+    padding-top: 16px !important;
+  }
+
+  .completed-task {
+    opacity: 0.7 !important;
+  }
+
+  .completed-task .task-item-title {
+    text-decoration: line-through !important;
+    color: #666 !important;
+  }
+}

@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-elevated: #35363a;
+  --color-bg-container: #2b2c2f;
+  --color-border: #3c4043;
+  --color-text: #e8eaed;
+  --color-text-secondary: #9aa0a6;
+}
+
+/* Force dark mode on Ant Design Dropdown */
+.ant-dropdown,
+.ant-dropdown-menu {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.ant-dropdown-menu-item,
+.ant-dropdown-menu-submenu-title {
+  color: var(--color-text) !important;
+}
+
+.ant-dropdown-menu-item:hover,
+.ant-dropdown-menu-submenu-title:hover {
+  background-color: #303134 !important;
+}
+
+.ant-dropdown-menu-submenu-popup {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+/* Force dark mode on Ant Design Modal */
+.ant-modal-content {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.ant-modal-header {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.ant-modal-title {
+  color: var(--color-text) !important;
+}
+
+.ant-modal-body {
+  color: var(--color-text) !important;
+}
+
+.ant-modal-close {
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-modal-close:hover {
+  color: var(--color-text) !important;
+}
+
+/* Force dark mode on Menu SubMenu popup */
+.ant-menu-submenu-popup {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.ant-menu-sub {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+/* Override mask */
+.ant-modal-mask {
+  background-color: rgba(0, 0, 0, 0.65) !important;
+}
+
+/* Modal buttons dark mode */
+.ant-modal .ant-btn-default {
+  background-color: #303134 !important;
+  border-color: #3c4043 !important;
+  color: #e8eaed !important;
+}
+
+.ant-modal .ant-btn-default:hover {
+  background-color: #3c4043 !important;
+  border-color: #9aa0a6 !important;
+  color: #ffffff !important;
+}
+
+.ant-modal .ant-btn-primary {
+  background-color: #8ab4f8 !important;
+  border-color: #8ab4f8 !important;
+  color: #171717 !important;
+}
+
+.ant-modal .ant-btn-primary:hover {
+  background-color: #aecbfa !important;
+  border-color: #aecbfa !important;
+}
