@@ -8,6 +8,10 @@ interface UpdateTaskRequest {
   description?: string;
   completed?: boolean;
   starred?: boolean;
+  starredAt?: Date;
+  dueDate?: Date;
+  dueTime?: string;
+  order?: number;
 }
 
 export class UpdateTaskUseCase {

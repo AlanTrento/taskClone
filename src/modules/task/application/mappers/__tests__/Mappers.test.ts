@@ -14,6 +14,7 @@ describe('TaskMapper', () => {
     listId: '1',
     createdAt: new Date('2024-01-15T00:00:00.000Z'),
     updatedAt: new Date('2024-01-16T00:00:00.000Z'),
+    order: 0,
   };
 
   it('toTaskDTO converts dates to strings', () => {
@@ -24,8 +25,25 @@ describe('TaskMapper', () => {
     expect(dto.description).toBe('Desc');
     expect(dto.completed).toBe(true);
     expect(dto.listId).toBe('1');
+    expect(dto.order).toBe(0);
     expect(typeof dto.createdAt).toBe('string');
     expect(typeof dto.updatedAt).toBe('string');
+  });
+
+  it('toTaskDTO maps dueDate, dueTime, starredAt', () => {
+    const taskWithDates: Task = {
+      ...task,
+      dueDate: new Date('2024-06-15'),
+      dueTime: '14:30',
+      starredAt: new Date('2024-01-17'),
+      order: 3,
+    };
+    const dto = toTaskDTO(taskWithDates);
+
+    expect(dto.dueDate).toBe(new Date('2024-06-15').toISOString());
+    expect(dto.dueTime).toBe('14:30');
+    expect(dto.starredAt).toBe(new Date('2024-01-17').toISOString());
+    expect(dto.order).toBe(3);
   });
 
   it('toTask converts strings to dates', () => {
@@ -37,6 +55,22 @@ describe('TaskMapper', () => {
     expect(result.createdAt).toBeInstanceOf(Date);
     expect(result.updatedAt).toBeInstanceOf(Date);
     expect(result.createdAt.getTime()).toBe(task.createdAt.getTime());
+  });
+
+  it('toTask maps dueDate, dueTime, starredAt, order', () => {
+    const dto = toTaskDTO({
+      ...task,
+      dueDate: new Date('2024-06-15'),
+      dueTime: '14:30',
+      starredAt: new Date('2024-01-17'),
+      order: 3,
+    });
+    const result = toTask(dto);
+
+    expect(result.dueDate).toEqual(new Date('2024-06-15'));
+    expect(result.dueTime).toBe('14:30');
+    expect(result.starredAt).toEqual(new Date('2024-01-17'));
+    expect(result.order).toBe(3);
   });
 
   it('roundtrip preserves data', () => {

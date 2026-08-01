@@ -7,6 +7,10 @@ export interface TaskDTO {
   listId: string;
   createdAt: string;
   updatedAt: string;
+  dueDate?: string;
+  dueTime?: string;
+  starredAt?: string;
+  order: number;
 }
 
 export interface TaskListDTO {

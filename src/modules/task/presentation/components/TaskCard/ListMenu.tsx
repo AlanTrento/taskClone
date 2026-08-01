@@ -177,6 +177,8 @@ export const ListMenu = memo(function ListMenu({
           onPressEnter={handleRename}
           placeholder="Nome da lista"
           autoFocus
+          className="input-task"
+          style={styles.renameInput}
         />
       </Modal>
 

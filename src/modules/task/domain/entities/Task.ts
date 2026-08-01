@@ -8,7 +8,9 @@ export interface Task {
   createdAt: Date;
   updatedAt: Date;
   dueDate?: Date;
+  dueTime?: string;
   starredAt?: Date;
+  order: number;
 }
 
 export function createTask(data: Omit<Task, 'createdAt' | 'updatedAt'>): Task {

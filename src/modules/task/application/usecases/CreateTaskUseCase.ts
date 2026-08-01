@@ -6,6 +6,7 @@ interface CreateTaskRequest {
   title: string;
   description?: string;
   listId: string;
+  order?: number;
 }
 
 export class CreateTaskUseCase {
@@ -23,6 +24,7 @@ export class CreateTaskUseCase {
       completed: false,
       starred: false,
       listId: request.listId,
+      order: request.order ?? 0,
     });
 
     return this.taskRepository.create(newTask);

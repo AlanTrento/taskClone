@@ -8,17 +8,23 @@ export const styles: Record<string, CSSProperties> = {
     gap: 12,
     height: 40,
     padding: '0 8px',
-    color: colors.textSecondary,
+    color: colors.primaryGreen,
     width: '100%',
     justifyContent: 'flex-start',
     marginBottom: 8,
   },
   icon: {
-    color: colors.primaryBlue,
+    color: colors.primaryGreen,
+    fontSize: 18,
   },
   inputRow: {
     display: 'flex',
     padding: '6px 8px',
     marginBottom: 8,
+  },
+  input: {
+    backgroundColor: colors.backgroundInput,
+    borderColor: colors.primaryBlue,
+    color: colors.textPrimary,
   },
 };

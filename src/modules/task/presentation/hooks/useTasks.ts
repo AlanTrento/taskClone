@@ -5,6 +5,7 @@ import { Container } from '../../application/di/Container';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [starredCount, setStarredCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<SortOption>('order');
@@ -25,7 +26,10 @@ export function useTasks() {
   useEffect(() => {
     const viewModel = viewModelRef.current!;
 
-    viewModel.onTasksChanged(setTasks);
+    viewModel.onTasksChanged((updatedTasks) => {
+      setTasks(updatedTasks);
+      setStarredCount(viewModel.starredCount);
+    });
     viewModel.onLoadingChanged(setLoading);
     viewModel.onErrorChanged(setError);
 
@@ -36,7 +40,7 @@ export function useTasks() {
     await viewModelRef.current?.createTask(title, description, listId);
   }, []);
 
-  const updateTask = useCallback(async (id: string, updates: Partial<Pick<Task, 'title' | 'description' | 'completed' | 'starred'>>) => {
+  const updateTask = useCallback(async (id: string, updates: Partial<Pick<Task, 'title' | 'description' | 'completed' | 'starred' | 'starredAt' | 'dueDate' | 'dueTime' | 'order'>>) => {
     await viewModelRef.current?.updateTask(id, updates);
   }, []);
 
@@ -65,6 +69,10 @@ export function useTasks() {
     setSortOption(by);
   }, []);
 
+  const reorderTask = useCallback((taskId: string, targetIndex: number) => {
+    viewModelRef.current?.reorderTask(taskId, targetIndex);
+  }, []);
+
   const deleteCompletedTasks = useCallback(async () => {
     await viewModelRef.current?.deleteCompletedTasks();
   }, []);
@@ -75,6 +83,7 @@ export function useTasks() {
 
   return {
     tasks,
+    starredCount,
     loading,
     error,
     sortOption,
@@ -86,6 +95,7 @@ export function useTasks() {
     refresh,
     setListFilter,
     sortTasks,
+    reorderTask,
     deleteCompletedTasks,
     markOldTasksAsCompleted,
   };

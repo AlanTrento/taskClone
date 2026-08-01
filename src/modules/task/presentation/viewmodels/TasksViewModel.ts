@@ -6,6 +6,7 @@ import type { UpdateTaskUseCase } from '../../application/usecases/UpdateTaskUse
 import type { DeleteTaskUseCase } from '../../application/usecases/DeleteTaskUseCase';
 import type { DeleteCompletedTasksUseCase } from '../../application/usecases/DeleteCompletedTasksUseCase';
 import type { MarkOldTasksAsCompletedUseCase } from '../../application/usecases/MarkOldTasksAsCompletedUseCase';
+import { notificationService } from '../../../../shared/services/NotificationService';
 
 export type SortOption = 'order' | 'date' | 'dueDate' | 'starred' | 'title';
 
@@ -60,6 +61,10 @@ export class TasksViewModel {
     return this._sortOption;
   }
 
+  get starredCount(): number {
+    return this._allTasks.filter((t) => t.starred && !t.completed).length;
+  }
+
   onTasksChanged(callback: (tasks: Task[]) => void): void {
     this._onTasksChanged = callback;
   }
@@ -78,6 +83,7 @@ export class TasksViewModel {
 
     try {
       this._allTasks = await this.getTasksUseCase.execute();
+      this.scheduleNotificationsForTasks();
       this.applyFilter();
     } catch (err) {
       this.setError(err instanceof Error ? err.message : 'Erro ao carregar tarefas');
@@ -92,7 +98,9 @@ export class TasksViewModel {
   }
 
   private applyFilter(): void {
-    if (this._listFilter) {
+    if (this._listFilter === 'starred') {
+      this._tasks = this._allTasks.filter((t) => t.starred && !t.completed);
+    } else if (this._listFilter) {
       this._tasks = this._allTasks.filter((t) => t.listId === this._listFilter);
     } else {
       this._tasks = [...this._allTasks];
@@ -110,9 +118,11 @@ export class TasksViewModel {
       completed: false,
       starred: false,
       listId: listId || '1',
+      order: this._allTasks.length,
     });
 
     this._tasks = [newTask, ...this._tasks];
+    this._allTasks = [...this._allTasks, newTask];
     this._onTasksChanged?.(this._tasks);
 
     try {
@@ -120,22 +130,43 @@ export class TasksViewModel {
         title,
         description,
         listId: listId || '1',
+        order: newTask.order,
       });
     } catch (err) {
       this._tasks = this._tasks.filter((t) => t.id !== newTask.id);
+      this._allTasks = this._allTasks.filter((t) => t.id !== newTask.id);
       this._onTasksChanged?.(this._tasks);
       this.setError(err instanceof Error ? err.message : 'Erro ao criar tarefa');
     }
   }
 
-  async updateTask(id: string, updates: Partial<Pick<Task, 'title' | 'description' | 'completed' | 'starred'>>): Promise<void> {
+  async updateTask(id: string, updates: Partial<Pick<Task, 'title' | 'description' | 'completed' | 'starred' | 'starredAt' | 'dueDate' | 'dueTime' | 'order'>>): Promise<void> {
     this.setError(null);
+
+    const previousTasks = [...this._tasks];
+    const previousAllTasks = [...this._allTasks];
+
+    const applyUpdates = (task: Task): Task =>
+      task.id === id ? { ...task, ...updates, updatedAt: new Date() } as Task : task;
+
+    this._tasks = this._tasks.map(applyUpdates);
+    this._allTasks = this._allTasks.map(applyUpdates);
+    this._onTasksChanged?.(this._tasks);
 
     try {
       const updatedTask = await this.updateTaskUseCase.execute({ id, ...updates });
       this._tasks = this._tasks.map((task) => (task.id === id ? updatedTask : task));
+      this._allTasks = this._allTasks.map((task) => (task.id === id ? updatedTask : task));
+
+      if (updates.dueDate !== undefined) {
+        this.handleNotificationSchedule(updatedTask);
+      }
+
       this._onTasksChanged?.(this._tasks);
     } catch (err) {
+      this._tasks = previousTasks;
+      this._allTasks = previousAllTasks;
+      this._onTasksChanged?.(this._tasks);
       this.setError(err instanceof Error ? err.message : 'Erro ao atualizar tarefa');
     }
   }
@@ -144,8 +175,10 @@ export class TasksViewModel {
     this.setError(null);
 
     try {
+      notificationService.cancel(id);
       await this.deleteTaskUseCase.execute(id);
       this._tasks = this._tasks.filter((task) => task.id !== id);
+      this._allTasks = this._allTasks.filter((task) => task.id !== id);
       this._onTasksChanged?.(this._tasks);
     } catch (err) {
       this.setError(err instanceof Error ? err.message : 'Erro ao excluir tarefa');
@@ -153,17 +186,43 @@ export class TasksViewModel {
   }
 
   async toggleCompleted(id: string): Promise<void> {
-    const task = this._tasks.find((t) => t.id === id);
+    const task = this._allTasks.find((t) => t.id === id);
     if (task) {
       await this.updateTask(id, { completed: !task.completed });
     }
   }
 
   async toggleStarred(id: string): Promise<void> {
-    const task = this._tasks.find((t) => t.id === id);
+    const task = this._allTasks.find((t) => t.id === id);
     if (task) {
-      await this.updateTask(id, { starred: !task.starred });
+      const newStarred = !task.starred;
+      await this.updateTask(id, {
+        starred: newStarred,
+        starredAt: newStarred ? new Date() : undefined,
+      });
     }
+  }
+
+  reorderTask(taskId: string, targetIndex: number): void {
+    const taskIndex = this._allTasks.findIndex((t) => t.id === taskId);
+    if (taskIndex === -1) return;
+
+    const task = this._allTasks[taskIndex];
+    const newAllTasks = [...this._allTasks];
+    newAllTasks.splice(taskIndex, 1);
+    newAllTasks.splice(targetIndex, 0, task);
+
+    const reorderedTasks = newAllTasks.map((t, idx) => ({
+      ...t,
+      order: idx,
+    }));
+
+    this._allTasks = reorderedTasks;
+    this.applyFilter();
+
+    reorderedTasks.forEach((t) => {
+      this.updateTaskUseCase.execute({ id: t.id, order: t.order });
+    });
   }
 
   sortTasks(by: SortOption): void {
@@ -172,7 +231,7 @@ export class TasksViewModel {
     
     switch (by) {
       case 'order':
-        // Mantém a ordem original (do array)
+        sorted.sort((a, b) => a.order - b.order);
         break;
       case 'date':
         sorted.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -218,11 +277,29 @@ export class TasksViewModel {
     try {
       const listId = this._listFilter || '1';
       await this.markOldTasksAsCompletedUseCase.execute(listId);
-      // Recarrega para refletir mudanças
       await this.loadTasks();
     } catch (err) {
       this.setError(err instanceof Error ? err.message : 'Erro ao marcar tarefas antigas');
     }
+  }
+
+  private handleNotificationSchedule(task: Task): void {
+    if (task.dueDate && !task.completed) {
+      const notificationDate = new Date(task.dueDate);
+      if (task.dueTime) {
+        const [hours, minutes] = task.dueTime.split(':').map(Number);
+        notificationDate.setHours(hours, minutes, 0, 0);
+      }
+      notificationService.schedule(task.id, task.title, notificationDate);
+    } else {
+      notificationService.cancel(task.id);
+    }
+  }
+
+  private scheduleNotificationsForTasks(): void {
+    this._allTasks.forEach((task) => {
+      this.handleNotificationSchedule(task);
+    });
   }
 
   private setLoading(loading: boolean): void {

@@ -15,6 +15,7 @@ function createMockTask(overrides: Partial<Task> = {}): Task {
     completed: false,
     starred: false,
     listId: '1',
+    order: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -86,7 +87,19 @@ describe('UseCases', () => {
       expect(result.completed).toBe(false);
       expect(result.starred).toBe(false);
       expect(result.listId).toBe('1');
+      expect(result.order).toBe(0);
       expect(result.id).toBeDefined();
+    });
+
+    it('creates a task with custom order', async () => {
+      const useCase = new CreateTaskUseCase(repo);
+      const result = await useCase.execute({
+        title: 'Ordered Task',
+        listId: '1',
+        order: 5,
+      });
+
+      expect(result.order).toBe(5);
     });
 
     it('generates unique id', async () => {
@@ -105,6 +118,28 @@ describe('UseCases', () => {
 
       expect(result.title).toBe('Updated');
       expect(result.id).toBe('1');
+    });
+
+    it('updates dueDate', async () => {
+      const useCase = new UpdateTaskUseCase(repo);
+      const date = new Date('2024-06-15');
+      const result = await useCase.execute({ id: '1', dueDate: date });
+
+      expect(result.dueDate).toEqual(date);
+    });
+
+    it('updates dueTime', async () => {
+      const useCase = new UpdateTaskUseCase(repo);
+      const result = await useCase.execute({ id: '1', dueTime: '14:30' });
+
+      expect(result.dueTime).toBe('14:30');
+    });
+
+    it('updates order', async () => {
+      const useCase = new UpdateTaskUseCase(repo);
+      const result = await useCase.execute({ id: '1', order: 3 });
+
+      expect(result.order).toBe(3);
     });
 
     it('throws for non-existent task', async () => {

@@ -4,7 +4,7 @@ import { colors } from '../../../../../shared/styles/colors';
 export const styles: Record<string, CSSProperties> = {
   trigger: {
     color: colors.textSecondary,
-    backgroundColor: colors.backgroundLight,
+    backgroundColor: colors.backgroundDarkest,
     fontSize: 16,
     width: 32,
     height: 32,
@@ -55,5 +55,10 @@ export const styles: Record<string, CSSProperties> = {
     backgroundColor: colors.errorRed,
     borderColor: colors.errorRed,
     color: colors.textWhite,
+  },
+  renameInput: {
+    backgroundColor: colors.backgroundInput,
+    borderColor: colors.primaryBlue,
+    color: colors.textPrimary,
   },
 };

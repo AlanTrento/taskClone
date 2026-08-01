@@ -15,9 +15,10 @@ import type { SortOption } from './modules/task/presentation/viewmodels/TasksVie
 
 function App() {
   const { 
-    tasks, loading, error, sortOption,
+    tasks, starredCount, loading, error, sortOption,
     createTask, updateTask, deleteTask, toggleCompleted, toggleStarred, 
-    refresh, setListFilter, sortTasks, deleteCompletedTasks, markOldTasksAsCompleted 
+    refresh, setListFilter, sortTasks, reorderTask,
+    deleteCompletedTasks, markOldTasksAsCompleted 
   } = useTasks();
   const { taskLists, activeListId, setActiveList, updateTaskList, deleteTaskList } = useTaskLists();
 
@@ -29,13 +30,31 @@ function App() {
     [updateTask]
   );
 
+  const handleUpdateDetails = useCallback(
+    (id: string, description: string) => updateTask(id, { description }),
+    [updateTask]
+  );
+
+  const handleSetDateTime = useCallback(
+    (id: string, dueDate: Date, dueTime: string) => updateTask(id, { dueDate, dueTime }),
+    [updateTask]
+  );
+
+  const handleReorder = useCallback(
+    (taskId: string, targetIndex: number) => reorderTask(taskId, targetIndex),
+    [reorderTask]
+  );
+
   useEffect(() => {
     setListFilter(activeListId);
   }, [activeListId, setListFilter]);
 
   const handleAddTask = useCallback(
     (title: string) => {
-      const listId = activeListId || taskLists[0]?.id || '1';
+      // Quando na view "Com estrela", criar na primeira lista real
+      const listId = activeListId === 'starred'
+        ? taskLists[0]?.id || '1'
+        : activeListId || taskLists[0]?.id || '1';
       createTask(title, undefined, listId);
     },
     [activeListId, taskLists, createTask]
@@ -50,7 +69,7 @@ function App() {
 
   const handleRename = useCallback(
     (name: string) => {
-      if (activeListId) {
+      if (activeListId && activeListId !== 'starred') {
         updateTaskList(activeListId, { name });
       }
     },
@@ -59,7 +78,7 @@ function App() {
 
   const handleDelete = useCallback(
     () => {
-      if (activeListId) {
+      if (activeListId && activeListId !== 'starred') {
         deleteTaskList(activeListId);
       }
     },
@@ -74,16 +93,27 @@ function App() {
   );
 
   const activeList = taskLists.find((l) => l.id === activeListId);
-  const isDefaultList = activeListId === taskLists[0]?.id;
+  const isStarredView = activeListId === 'starred';
+  const isDefaultList = !isStarredView && activeListId === taskLists[0]?.id;
+
+  const headerTitle = isStarredView
+    ? 'Com estrela'
+    : activeList?.name || 'Minhas tarefas';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <TopBar />
-      <AppLayout sidebar={<Sidebar activeListId={activeListId} onSelectList={setActiveList} />}>
+      <AppLayout sidebar={
+        <Sidebar
+          activeListId={activeListId}
+          starredCount={starredCount}
+          onSelectList={setActiveList}
+        />
+      }>
         <MainContent>
           <TaskCard>
             <TaskCardHeader 
-              title={activeList?.name || 'Minhas tarefas'} 
+              title={headerTitle}
               sortOption={sortOption}
               isDefaultList={isDefaultList}
               onSort={handleSort}
@@ -103,7 +133,10 @@ function App() {
                 onToggleCompleted={toggleCompleted}
                 onToggleStarred={toggleStarred}
                 onUpdate={handleUpdateTitle}
+                onUpdateDetails={handleUpdateDetails}
+                onSetDateTime={handleSetDateTime}
                 onDelete={deleteTask}
+                onReorder={handleReorder}
               />
             )}
             {!loading && !error && completedTasks.length > 0 && (
@@ -112,6 +145,8 @@ function App() {
                 onToggleCompleted={toggleCompleted}
                 onToggleStarred={toggleStarred}
                 onUpdate={handleUpdateTitle}
+                onUpdateDetails={handleUpdateDetails}
+                onSetDateTime={handleSetDateTime}
                 onDelete={deleteTask}
               />
             )}

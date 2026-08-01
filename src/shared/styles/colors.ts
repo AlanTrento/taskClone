@@ -13,6 +13,7 @@ export const colors = {
   // Text
   textPrimary: '#e8eaed',
   textSecondary: '#9aa0a6',
+  textPlaceholder: '#bdc1c6',
   textDisabled: '#5f6368',
   textWhite: '#ffffff',
 
@@ -20,6 +21,7 @@ export const colors = {
   primaryBlue: '#8ab4f8',
   primaryBlueDark: '#0b57d0',
   primaryBlueLight: '#aecbfa',
+  primaryGreen: '#81c995',
 
   // Status
   successGreen: '#81c995',

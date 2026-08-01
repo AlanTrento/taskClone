@@ -1,17 +1,24 @@
 import { useState } from 'react';
-import { PlusOutlined, UnorderedListOutlined, StarOutlined, FolderOutlined, DeleteOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  CheckSquareOutlined,
+  StarOutlined,
+  FolderOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
 import { Button, Input, Typography } from 'antd';
-import { spacing, borderRadius } from '../../shared/styles/spacing';
 import { useTaskLists } from '../../modules/task/presentation/hooks/useTaskLists';
+import { styles, getMenuItemStyle } from './Sidebar.styles';
 
 const { Text } = Typography;
 
 interface SidebarProps {
   activeListId: string | null;
+  starredCount: number;
   onSelectList: (listId: string | null) => void;
 }
 
-export function Sidebar({ activeListId, onSelectList }: SidebarProps) {
+export function Sidebar({ activeListId, starredCount, onSelectList }: SidebarProps) {
   const { taskLists, createTaskList, deleteTaskList } = useTaskLists();
   const [isCreating, setIsCreating] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -20,59 +27,40 @@ export function Sidebar({ activeListId, onSelectList }: SidebarProps) {
     if (newListName.trim()) {
       createTaskList(newListName.trim(), '#8ab4f8');
       setNewListName('');
-      setIsCreating(false);
     }
+    setIsCreating(false);
+  };
+
+  const handleCreateBlur = () => {
+    if (newListName.trim()) {
+      createTaskList(newListName.trim(), '#8ab4f8');
+      setNewListName('');
+    }
+    setIsCreating(false);
   };
 
   return (
-    <aside style={{
-      width: 280,
-      height: 'calc(100vh - 64px)',
-      backgroundColor: '#202124',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: `${spacing.lg}px ${spacing.sm}px ${spacing.lg}px ${spacing.sm}px`,
-      gap: spacing.xxl,
-      overflowY: 'auto',
-    }}>
-      {/* Botão Criar */}
-      <Button
-        icon={<PlusOutlined />}
-        style={{
-          width: 104,
-          height: 54,
-          borderRadius: borderRadius.lg,
-          backgroundColor: '#303134',
-          borderColor: 'transparent',
-          color: '#e8eaed',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing.md,
-        }}
-      >
-        Criar
-      </Button>
-
+    <aside style={styles.container}>
       {/* Menu Principal */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+      <nav style={styles.nav}>
         <MenuItem
-          icon={<UnorderedListOutlined />}
+          icon={<CheckSquareOutlined />}
           label="Todas as tarefas"
           active={activeListId === null}
           onClick={() => onSelectList(null)}
         />
-        <MenuItem icon={<StarOutlined />} label="Com estrela" />
+        <MenuItem
+          icon={<StarOutlined />}
+          label="Com estrela"
+          active={activeListId === 'starred'}
+          count={starredCount}
+          onClick={() => onSelectList('starred')}
+        />
       </nav>
 
       {/* Seção Listas */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-        <Text style={{
-          fontSize: 14,
-          fontWeight: 600,
-          color: '#bdc1c6',
-          padding: `0 ${spacing.lg}px`,
-        }}>
+      <div style={styles.listSection}>
+        <Text style={styles.listLabel}>
           Listas
         </Text>
 
@@ -88,36 +76,25 @@ export function Sidebar({ activeListId, onSelectList }: SidebarProps) {
         ))}
 
         {isCreating ? (
-          <div style={{ display: 'flex', gap: 4, padding: `0 ${spacing.lg}px` }}>
+          <div style={styles.newListNode}>
             <Input
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
               onPressEnter={handleCreateList}
-              onBlur={() => { if (!newListName.trim()) setIsCreating(false); }}
+              onBlur={handleCreateBlur}
               placeholder="Nome da lista"
               autoFocus
               size="small"
-              style={{
-                backgroundColor: '#232425',
-                borderColor: '#8ab4f8',
-                color: '#e8eaed',
-              }}
+              className="input-task"
+              style={styles.newListItemInput}
             />
-            <Button size="small" type="primary" onClick={handleCreateList}>
-              OK
-            </Button>
           </div>
         ) : (
           <Button
             type="text"
             icon={<PlusOutlined />}
             onClick={() => setIsCreating(true)}
-            style={{
-              justifyContent: 'flex-start',
-              color: '#8ab4f8',
-              height: 40,
-              padding: `0 ${spacing.lg}px`,
-            }}
+            style={styles.createListButton}
           >
             Criar nova lista
           </Button>
@@ -137,30 +114,25 @@ interface MenuItemProps {
 }
 
 function MenuItem({ icon, label, active = false, count, onClick, onDelete }: MenuItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <Button
       type="text"
       icon={icon}
       onClick={onClick}
-      style={{
-        justifyContent: 'flex-start',
-        backgroundColor: active ? '#0b57d0' : 'transparent',
-        color: active ? '#ffffff' : '#e8eaed',
-        height: 40,
-        borderRadius: borderRadius.xl,
-        padding: `0 ${spacing.lg}px`,
-        gap: spacing.md,
-        width: '100%',
-      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={getMenuItemStyle(active)}
     >
-      <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
+      <span style={styles.menuItemLabel}>{label}</span>
       {count !== undefined && (
-        <Text style={{ color: '#9aa0a6', fontSize: 12 }}>{count}</Text>
+        <Text style={styles.menuItemCount}>{count}</Text>
       )}
-      {onDelete && (
+      {onDelete && (isHovered || active) && (
         <DeleteOutlined
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          style={{ color: '#9aa0a6', fontSize: 12 }}
+          style={styles.deleteIcon}
         />
       )}
     </Button>

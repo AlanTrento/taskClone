@@ -10,6 +10,7 @@ describe('Task Entity', () => {
     completed: false,
     starred: false,
     listId: '1',
+    order: 0,
   };
 
   describe('createTask', () => {
@@ -20,6 +21,7 @@ describe('Task Entity', () => {
       expect(task.title).toBe('Test Task');
       expect(task.completed).toBe(false);
       expect(task.starred).toBe(false);
+      expect(task.order).toBe(0);
       expect(task.createdAt).toBeInstanceOf(Date);
       expect(task.updatedAt).toBeInstanceOf(Date);
     });
@@ -51,6 +53,28 @@ describe('Task Entity', () => {
       const updated = updateTask(task, { starred: true });
 
       expect(updated.starred).toBe(true);
+    });
+
+    it('updates dueDate', () => {
+      const task = createTask(baseTask);
+      const date = new Date('2024-06-15');
+      const updated = updateTask(task, { dueDate: date });
+
+      expect(updated.dueDate).toEqual(date);
+    });
+
+    it('updates dueTime', () => {
+      const task = createTask(baseTask);
+      const updated = updateTask(task, { dueTime: '14:30' });
+
+      expect(updated.dueTime).toBe('14:30');
+    });
+
+    it('updates order', () => {
+      const task = createTask(baseTask);
+      const updated = updateTask(task, { order: 5 });
+
+      expect(updated.order).toBe(5);
     });
 
     it('bumps updatedAt', () => {

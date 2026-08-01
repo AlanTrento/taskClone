@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusCircleFilled } from '@ant-design/icons';
 import { Button, Input } from 'antd';
 import { styles } from './AddTaskRow.styles';
 
@@ -36,7 +36,7 @@ export const AddTaskRow = memo(function AddTaskRow({ onAddTask }: AddTaskRowProp
     <>
       <Button
         type="text"
-        icon={<PlusOutlined style={styles.icon} />}
+        icon={<PlusCircleFilled style={styles.icon} />}
         onClick={() => setIsAdding(true)}
         style={styles.addButton}
       >
@@ -51,6 +51,8 @@ export const AddTaskRow = memo(function AddTaskRow({ onAddTask }: AddTaskRowProp
             onBlur={handleBlur}
             placeholder="Nome da tarefa"
             autoFocus
+            className="input-task"
+            style={styles.input}
           />
         </div>
       )}

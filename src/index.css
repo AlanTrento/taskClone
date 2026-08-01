@@ -92,3 +92,173 @@
   background-color: #aecbfa !important;
   border-color: #aecbfa !important;
 }
+
+/* Input task placeholder */
+.input-task::placeholder {
+  color: #bdc1c6;
+}
+
+/* ── ScheduleDatePicker (inside Modal) ─────────────────────── */
+.schedule-datepicker {
+  width: 100% !important;
+  background-color: var(--color-bg-container) !important;
+  border-color: var(--color-border) !important;
+}
+
+.schedule-datepicker .ant-picker-input > input {
+  color: var(--color-text) !important;
+}
+
+.schedule-datepicker .ant-picker-input > input::placeholder {
+  color: var(--color-text-secondary) !important;
+}
+
+.schedule-datepicker .ant-picker-suffix {
+  color: var(--color-text-secondary) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-dropdown {
+  position: static !important;
+  inset: auto !important;
+  box-shadow: none !important;
+}
+
+.schedule-datepicker-panel .ant-picker-dropdown-hidden {
+  display: block !important;
+}
+
+.schedule-datepicker-panel .ant-picker-panel-container {
+  background-color: var(--color-bg-elevated) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.schedule-datepicker-panel .ant-picker-header {
+  background-color: var(--color-bg-elevated) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-header button {
+  color: var(--color-text-secondary) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-header button:hover {
+  color: var(--color-text) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-header-view {
+  color: var(--color-text) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-header-view button {
+  color: var(--color-text) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-content th {
+  color: var(--color-text-secondary) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-cell-inner {
+  color: var(--color-text) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-cell-selected .ant-picker-cell-inner {
+  background-color: #8ab4f8 !important;
+  color: #171717 !important;
+}
+
+.schedule-datepicker-panel .ant-picker-cell:hover .ant-picker-cell-inner {
+  background-color: #303134 !important;
+}
+
+.schedule-datepicker-panel .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
+  border-color: #8ab4f8 !important;
+}
+
+/* Time panel inside schedule-datepicker */
+.schedule-datepicker-panel .ant-picker-dropdown .ant-picker-time-panel {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-time-panel-cell-inner {
+  color: var(--color-text) !important;
+}
+
+.schedule-datepicker-panel .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+  background-color: #8ab4f8 !important;
+  color: #171717 !important;
+}
+
+.schedule-datepicker-panel .ant-picker-ok .ant-btn-primary {
+  background-color: #8ab4f8 !important;
+  border-color: #8ab4f8 !important;
+  color: #171717 !important;
+}
+
+/* Force dark mode on Ant Design Popover */
+.ant-popover-inner {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.ant-popover-arrow::before,
+.ant-popover-arrow::after {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.ant-popover-inner-content {
+  color: var(--color-text) !important;
+}
+
+/* Force dark mode on Ant Design TimePicker */
+.ant-picker {
+  background-color: var(--color-bg-container) !important;
+  border-color: var(--color-border) !important;
+}
+
+.ant-picker-input > input {
+  color: var(--color-text) !important;
+}
+
+.ant-picker-input > input::placeholder {
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-picker-suffix {
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-picker-dropdown .ant-picker-panel-container {
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.ant-picker-dropdown .ant-picker-content th {
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell-inner {
+  color: var(--color-text) !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell-selected .ant-picker-cell-inner {
+  background-color: #8ab4f8 !important;
+  color: #171717 !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell:hover .ant-picker-cell-inner {
+  background-color: #303134 !important;
+}
+
+.ant-picker-time-panel-cell-selected {
+  background-color: #8ab4f8 !important;
+}
+
+.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+  color: #171717 !important;
+}
+
+.ant-picker-ok .ant-btn-primary {
+  background-color: #8ab4f8 !important;
+  border-color: #8ab4f8 !important;
+  color: #171717 !important;
+}

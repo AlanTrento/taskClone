@@ -11,6 +11,8 @@ interface Task {
   description?: string;
   completed: boolean;
   starred?: boolean;
+  dueDate?: Date;
+  dueTime?: string;
 }
 
 interface CompletedSectionProps {
@@ -18,6 +20,8 @@ interface CompletedSectionProps {
   onToggleCompleted?: (id: string) => void;
   onToggleStarred?: (id: string) => void;
   onUpdate?: (id: string, title: string) => void;
+  onUpdateDetails?: (id: string, details: string) => void;
+  onSetDateTime?: (id: string, dueDate: Date, dueTime: string) => void;
   onDelete?: (id: string) => void;
 }
 
@@ -26,6 +30,8 @@ export const CompletedSection = memo(function CompletedSection({
   onToggleCompleted,
   onToggleStarred,
   onUpdate,
+  onUpdateDetails,
+  onSetDateTime,
   onDelete,
 }: CompletedSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -57,6 +63,8 @@ export const CompletedSection = memo(function CompletedSection({
             onToggleCompleted={onToggleCompleted}
             onToggleStarred={onToggleStarred}
             onUpdate={onUpdate}
+            onUpdateDetails={onUpdateDetails}
+            onSetDateTime={onSetDateTime}
             onDelete={onDelete}
           />
         </div>
