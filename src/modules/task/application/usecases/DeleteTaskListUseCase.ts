@@ -1,10 +1,13 @@
 import type { ITaskListRepository } from '../../domain/repositories/ITaskListRepository';
+import type { ITaskRepository } from '../../domain/repositories/ITaskRepository';
 
 export class DeleteTaskListUseCase {
   private taskListRepository: ITaskListRepository;
+  private taskRepository: ITaskRepository;
 
-  constructor(taskListRepository: ITaskListRepository) {
+  constructor(taskListRepository: ITaskListRepository, taskRepository: ITaskRepository) {
     this.taskListRepository = taskListRepository;
+    this.taskRepository = taskRepository;
   }
 
   async execute(id: string): Promise<void> {

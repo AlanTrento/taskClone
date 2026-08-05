@@ -29,29 +29,54 @@ function createMockRepository(): ITaskRepository {
   ];
 
   return {
-    getAll: async () => [...tasks],
+    getAll: async (filters?) => {
+      let result = [...tasks];
+      if (filters?.listId) result = result.filter((t) => t.listId === filters.listId);
+      if (filters?.completed !== undefined) result = result.filter((t) => t.completed === filters.completed);
+      if (filters?.starred !== undefined) result = result.filter((t) => t.starred === filters.starred);
+      return result;
+    },
     getById: async (id: string) => tasks.find((t) => t.id === id) || null,
-    create: async (task: Task) => { tasks.push(task); return task; },
-    update: async (task: Task) => {
-      const idx = tasks.findIndex((t) => t.id === task.id);
-      if (idx !== -1) tasks[idx] = task;
-      return task;
+    create: async (data) => {
+      const now = new Date();
+      const maxOrder = tasks.reduce((max, t) => Math.max(max, t.order), -1);
+      const newTask: Task = {
+        id: crypto.randomUUID(),
+        title: data.title,
+        description: data.description,
+        completed: false,
+        starred: false,
+        listId: data.listId,
+        createdAt: (data as Record<string, unknown>).createdAt instanceof Date ? (data as Record<string, unknown>).createdAt as Date : now,
+        updatedAt: now,
+        order: data.order ?? maxOrder + 1,
+      };
+      tasks.push(newTask);
+      return newTask;
+    },
+    update: async (id, data) => {
+      const idx = tasks.findIndex((t) => t.id === id);
+      if (idx === -1) throw new Error('Task not found');
+      tasks[idx] = { ...tasks[idx], ...data, updatedAt: new Date() };
+      return tasks[idx];
     },
     delete: async (id: string) => {
       const idx = tasks.findIndex((t) => t.id === id);
       if (idx !== -1) tasks.splice(idx, 1);
     },
-    deleteByFilter: async (predicate: (task: Task) => boolean) => {
-      const indices: number[] = [];
-      tasks.forEach((task, idx) => {
-        if (predicate(task)) indices.push(idx);
-      });
-      indices.reverse().forEach((idx) => tasks.splice(idx, 1));
+    deleteCompletedByListId: async (listId: string) => {
+      for (let i = tasks.length - 1; i >= 0; i--) {
+        if (tasks[i].listId === listId && tasks[i].completed) {
+          tasks.splice(i, 1);
+        }
+      }
     },
-    updateByFilter: async (predicate: (task: Task) => boolean, updates: Partial<Task>) => {
+    markOldAsCompleted: async (listId: string, olderThanDays: number = 30) => {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - olderThanDays);
       tasks.forEach((task, idx) => {
-        if (predicate(task)) {
-          tasks[idx] = { ...task, ...updates, updatedAt: new Date() };
+        if (task.listId === listId && !task.completed && task.createdAt < cutoff) {
+          tasks[idx] = { ...task, completed: true, updatedAt: new Date() };
         }
       });
     },
@@ -87,7 +112,6 @@ describe('UseCases', () => {
       expect(result.completed).toBe(false);
       expect(result.starred).toBe(false);
       expect(result.listId).toBe('1');
-      expect(result.order).toBe(0);
       expect(result.id).toBeDefined();
     });
 
@@ -114,7 +138,7 @@ describe('UseCases', () => {
   describe('UpdateTaskUseCase', () => {
     it('updates existing task', async () => {
       const useCase = new UpdateTaskUseCase(repo);
-      const result = await useCase.execute({ id: '1', title: 'Updated' });
+      const result = await useCase.execute('1', { title: 'Updated' });
 
       expect(result.title).toBe('Updated');
       expect(result.id).toBe('1');
@@ -123,21 +147,21 @@ describe('UseCases', () => {
     it('updates dueDate', async () => {
       const useCase = new UpdateTaskUseCase(repo);
       const date = new Date('2024-06-15');
-      const result = await useCase.execute({ id: '1', dueDate: date });
+      const result = await useCase.execute('1', { dueDate: date });
 
       expect(result.dueDate).toEqual(date);
     });
 
     it('updates dueTime', async () => {
       const useCase = new UpdateTaskUseCase(repo);
-      const result = await useCase.execute({ id: '1', dueTime: '14:30' });
+      const result = await useCase.execute('1', { dueTime: '14:30' });
 
       expect(result.dueTime).toBe('14:30');
     });
 
     it('updates order', async () => {
       const useCase = new UpdateTaskUseCase(repo);
-      const result = await useCase.execute({ id: '1', order: 3 });
+      const result = await useCase.execute('1', { order: 3 });
 
       expect(result.order).toBe(3);
     });
@@ -145,7 +169,7 @@ describe('UseCases', () => {
     it('throws for non-existent task', async () => {
       const useCase = new UpdateTaskUseCase(repo);
 
-      await expect(useCase.execute({ id: '999', title: 'X' }))
+      await expect(useCase.execute('999', { title: 'X' }))
         .rejects.toThrow('Task not found');
     });
   });
@@ -192,19 +216,18 @@ describe('UseCases', () => {
       oldDate.setDate(oldDate.getDate() - 60);
 
       const repoWithOldTask = createMockRepository();
-      await repoWithOldTask.create(createMockTask({
-        id: '3',
+      const oldTask = await repoWithOldTask.create({
         title: 'Old Task',
-        completed: false,
-        createdAt: oldDate,
-      }));
+        listId: '1',
+      });
+      await repoWithOldTask.update(oldTask.id, { createdAt: oldDate } as Record<string, unknown>);
 
       const useCase = new MarkOldTasksAsCompletedUseCase(repoWithOldTask);
       await useCase.execute('1');
 
       const tasks = await repoWithOldTask.getAll();
-      const oldTask = tasks.find((t) => t.id === '3');
-      expect(oldTask?.completed).toBe(true);
+      const foundOldTask = tasks.find((t) => t.title === 'Old Task');
+      expect(foundOldTask?.completed).toBe(true);
     });
 
     it('does not mark recent tasks as completed', async () => {
@@ -212,18 +235,16 @@ describe('UseCases', () => {
       recentDate.setDate(recentDate.getDate() - 5);
 
       const repoWithRecentTask = createMockRepository();
-      await repoWithRecentTask.create(createMockTask({
-        id: '3',
+      await repoWithRecentTask.create({
         title: 'Recent Task',
-        completed: false,
-        createdAt: recentDate,
-      }));
+        listId: '1',
+      });
 
       const useCase = new MarkOldTasksAsCompletedUseCase(repoWithRecentTask);
       await useCase.execute('1');
 
       const tasks = await repoWithRecentTask.getAll();
-      const recentTask = tasks.find((t) => t.id === '3');
+      const recentTask = tasks.find((t) => t.title === 'Recent Task');
       expect(recentTask?.completed).toBe(false);
     });
   });

@@ -1,11 +1,29 @@
 import type { Task } from '../entities/Task';
 
+export interface CreateTaskRequest {
+  title: string;
+  description?: string;
+  listId: string;
+  order?: number;
+}
+
+export interface UpdateTaskRequest {
+  title?: string;
+  description?: string;
+  completed?: boolean;
+  starred?: boolean;
+  starredAt?: Date;
+  dueDate?: Date;
+  dueTime?: string;
+  order?: number;
+}
+
 export interface ITaskRepository {
-  getAll(): Promise<Task[]>;
+  getAll(filters?: { listId?: string; completed?: boolean; starred?: boolean }): Promise<Task[]>;
   getById(id: string): Promise<Task | null>;
-  create(task: Task): Promise<Task>;
-  update(task: Task): Promise<Task>;
+  create(data: CreateTaskRequest): Promise<Task>;
+  update(id: string, data: UpdateTaskRequest): Promise<Task>;
   delete(id: string): Promise<void>;
-  deleteByFilter(predicate: (task: Task) => boolean): Promise<void>;
-  updateByFilter(predicate: (task: Task) => boolean, updates: Partial<Task>): Promise<void>;
+  deleteCompletedByListId(listId: string): Promise<void>;
+  markOldAsCompleted(listId: string, olderThanDays?: number): Promise<void>;
 }

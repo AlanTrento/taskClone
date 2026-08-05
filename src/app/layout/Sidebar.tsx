@@ -6,8 +6,8 @@ import {
   FolderOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
-import { Button, Input, Typography } from 'antd';
-import { useTaskLists } from '../../modules/task/presentation/hooks/useTaskLists';
+import { Button, Input, Modal, Typography } from 'antd';
+import type { TaskList } from '../../modules/task/domain/entities/TaskList';
 import { styles, getMenuItemStyle } from './Sidebar.styles';
 
 const { Text } = Typography;
@@ -15,17 +15,20 @@ const { Text } = Typography;
 interface SidebarProps {
   activeListId: string | null;
   starredCount: number;
+  taskLists?: TaskList[];
   onSelectList: (listId: string | null) => void;
+  onCreateList?: (name: string, color: string) => void;
+  onConfirmDelete?: (listId: string) => void;
 }
 
-export function Sidebar({ activeListId, starredCount, onSelectList }: SidebarProps) {
-  const { taskLists, createTaskList, deleteTaskList } = useTaskLists();
+export function Sidebar({ activeListId, starredCount, taskLists = [], onSelectList, onCreateList, onConfirmDelete }: SidebarProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newListName, setNewListName] = useState('');
+  const [listToDelete, setListToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const handleCreateList = () => {
     if (newListName.trim()) {
-      createTaskList(newListName.trim(), '#8ab4f8');
+      onCreateList?.(newListName.trim(), '#8ab4f8');
       setNewListName('');
     }
     setIsCreating(false);
@@ -33,7 +36,7 @@ export function Sidebar({ activeListId, starredCount, onSelectList }: SidebarPro
 
   const handleCreateBlur = () => {
     if (newListName.trim()) {
-      createTaskList(newListName.trim(), '#8ab4f8');
+      onCreateList?.(newListName.trim(), '#8ab4f8');
       setNewListName('');
     }
     setIsCreating(false);
@@ -71,7 +74,7 @@ export function Sidebar({ activeListId, starredCount, onSelectList }: SidebarPro
             label={list.name}
             active={activeListId === list.id}
             onClick={() => onSelectList(list.id)}
-            onDelete={() => deleteTaskList(list.id)}
+            onDelete={() => setListToDelete({ id: list.id, name: list.name })}
           />
         ))}
 
@@ -100,6 +103,25 @@ export function Sidebar({ activeListId, starredCount, onSelectList }: SidebarPro
           </Button>
         )}
       </div>
+
+      <Modal
+        title="Excluir lista"
+        open={!!listToDelete}
+        onOk={() => {
+          if (listToDelete) {
+            onConfirmDelete?.(listToDelete.id);
+            setListToDelete(null);
+          }
+        }}
+        onCancel={() => setListToDelete(null)}
+        okText="Excluir"
+        cancelText="Cancelar"
+        okButtonProps={{ danger: true }}
+      >
+        <p>
+          Deseja excluir a lista <strong>{listToDelete?.name}</strong> e todas as suas tarefas?
+        </p>
+      </Modal>
     </aside>
   );
 }

@@ -1,13 +1,5 @@
 import type { Task } from '../../domain/entities/Task';
-import type { ITaskRepository } from '../../domain/repositories/ITaskRepository';
-import { createTask } from '../../domain/entities/Task';
-
-interface CreateTaskRequest {
-  title: string;
-  description?: string;
-  listId: string;
-  order?: number;
-}
+import type { ITaskRepository, CreateTaskRequest } from '../../domain/repositories/ITaskRepository';
 
 export class CreateTaskUseCase {
   private taskRepository: ITaskRepository;
@@ -17,16 +9,19 @@ export class CreateTaskUseCase {
   }
 
   async execute(request: CreateTaskRequest): Promise<Task> {
-    const newTask = createTask({
-      id: crypto.randomUUID(),
-      title: request.title,
-      description: request.description,
-      completed: false,
-      starred: false,
-      listId: request.listId,
-      order: request.order ?? 0,
-    });
+    if (!request.title || !request.title.trim()) {
+      throw new Error('Título é obrigatório');
+    }
 
-    return this.taskRepository.create(newTask);
+    if (!request.listId) {
+      throw new Error('Lista é obrigatória');
+    }
+
+    return this.taskRepository.create({
+      title: request.title.trim(),
+      description: request.description,
+      listId: request.listId,
+      order: request.order,
+    });
   }
 }

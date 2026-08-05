@@ -8,7 +8,7 @@ export class GetTasksUseCase {
     this.taskRepository = taskRepository;
   }
 
-  async execute(): Promise<Task[]> {
-    return this.taskRepository.getAll();
+  async execute(filters?: { listId?: string; completed?: boolean; starred?: boolean }): Promise<Task[]> {
+    return this.taskRepository.getAll(filters);
   }
 }

@@ -5,8 +5,8 @@ import { styles } from './TaskCardHeader.styles';
 
 interface TaskCardHeaderProps {
   title?: string;
+  listName?: string;
   sortOption?: SortOption;
-  isDefaultList?: boolean;
   onSort?: (by: SortOption) => void;
   onRename?: (name: string) => void;
   onDelete?: () => void;
@@ -17,8 +17,8 @@ interface TaskCardHeaderProps {
 
 export const TaskCardHeader = memo(function TaskCardHeader({
   title = 'Minhas tarefas',
+  listName,
   sortOption = 'order',
-  isDefaultList = false,
   onSort,
   onRename,
   onDelete,
@@ -33,8 +33,8 @@ export const TaskCardHeader = memo(function TaskCardHeader({
       </h1>
       {onSort && onRename && onDelete && onDeleteCompleted && onMarkOldAsCompleted && onPrint && (
         <ListMenu
+          listName={listName}
           sortOption={sortOption}
-          isDefaultList={isDefaultList}
           onSort={onSort}
           onRename={onRename}
           onDelete={onDelete}

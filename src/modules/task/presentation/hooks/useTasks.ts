@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Task } from '../../domain/entities/Task';
 import { TasksViewModel, type SortOption } from '../viewmodels/TasksViewModel';
 import { Container } from '../../application/di/Container';
+import { RepositoryFactory } from '../../infrastructure/factories/RepositoryFactory';
+import { notificationService } from '../../../../shared/services/NotificationService';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -14,6 +16,7 @@ export function useTasks() {
 
   if (!viewModelRef.current) {
     viewModelRef.current = new TasksViewModel(
+      RepositoryFactory.getTaskRepository(),
       Container.getGetTasksUseCase(),
       Container.getCreateTaskUseCase(),
       Container.getUpdateTaskUseCase(),
@@ -33,6 +36,7 @@ export function useTasks() {
     viewModel.onLoadingChanged(setLoading);
     viewModel.onErrorChanged(setError);
 
+    notificationService.requestPermission();
     viewModel.loadTasks();
   }, []);
 
@@ -77,6 +81,10 @@ export function useTasks() {
     await viewModelRef.current?.deleteCompletedTasks();
   }, []);
 
+  const deleteTasksByListId = useCallback(async (listId: string) => {
+    await viewModelRef.current?.deleteTasksByListId(listId);
+  }, []);
+
   const markOldTasksAsCompleted = useCallback(async () => {
     await viewModelRef.current?.markOldTasksAsCompleted();
   }, []);
@@ -97,6 +105,7 @@ export function useTasks() {
     sortTasks,
     reorderTask,
     deleteCompletedTasks,
+    deleteTasksByListId,
     markOldTasksAsCompleted,
   };
 }

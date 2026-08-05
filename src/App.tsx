@@ -18,9 +18,9 @@ function App() {
     tasks, starredCount, loading, error, sortOption,
     createTask, updateTask, deleteTask, toggleCompleted, toggleStarred, 
     refresh, setListFilter, sortTasks, reorderTask,
-    deleteCompletedTasks, markOldTasksAsCompleted 
+    deleteCompletedTasks, deleteTasksByListId, markOldTasksAsCompleted 
   } = useTasks();
-  const { taskLists, activeListId, setActiveList, updateTaskList, deleteTaskList } = useTaskLists();
+  const { taskLists, activeListId, setActiveList, createTaskList, updateTaskList, deleteTaskList } = useTaskLists();
 
   const pendingTasks = useMemo(() => tasks.filter((t) => !t.completed), [tasks]);
   const completedTasks = useMemo(() => tasks.filter((t) => t.completed), [tasks]);
@@ -53,8 +53,9 @@ function App() {
     (title: string) => {
       // Quando na view "Com estrela", criar na primeira lista real
       const listId = activeListId === 'starred'
-        ? taskLists[0]?.id || '1'
-        : activeListId || taskLists[0]?.id || '1';
+        ? taskLists[0]?.id
+        : activeListId ?? taskLists[0]?.id;
+      if (!listId) return;
       createTask(title, undefined, listId);
     },
     [activeListId, taskLists, createTask]
@@ -77,12 +78,20 @@ function App() {
   );
 
   const handleDelete = useCallback(
-    () => {
+    async (listId: string) => {
+      await deleteTasksByListId(listId);
+      await deleteTaskList(listId);
+    },
+    [deleteTasksByListId, deleteTaskList]
+  );
+
+  const handleDeleteActiveList = useCallback(
+    async () => {
       if (activeListId && activeListId !== 'starred') {
-        deleteTaskList(activeListId);
+        await handleDelete(activeListId);
       }
     },
-    [activeListId, deleteTaskList]
+    [activeListId, handleDelete]
   );
 
   const handlePrint = useCallback(
@@ -94,7 +103,6 @@ function App() {
 
   const activeList = taskLists.find((l) => l.id === activeListId);
   const isStarredView = activeListId === 'starred';
-  const isDefaultList = !isStarredView && activeListId === taskLists[0]?.id;
 
   const headerTitle = isStarredView
     ? 'Com estrela'
@@ -107,23 +115,26 @@ function App() {
         <Sidebar
           activeListId={activeListId}
           starredCount={starredCount}
+          taskLists={taskLists}
           onSelectList={setActiveList}
+          onCreateList={createTaskList}
+          onConfirmDelete={handleDelete}
         />
       }>
         <MainContent>
           <TaskCard>
             <TaskCardHeader 
               title={headerTitle}
+              listName={headerTitle}
               sortOption={sortOption}
-              isDefaultList={isDefaultList}
               onSort={handleSort}
               onRename={handleRename}
-              onDelete={handleDelete}
+              onDelete={handleDeleteActiveList}
               onDeleteCompleted={deleteCompletedTasks}
               onMarkOldAsCompleted={markOldTasksAsCompleted}
               onPrint={handlePrint}
             />
-            <AddTaskRow onAddTask={handleAddTask} />
+            {activeListId && activeListId !== 'starred' && <AddTaskRow onAddTask={handleAddTask} />}
             {loading && <LoadingState />}
             {error && <ErrorState message={error} onRetry={refresh} />}
             {!loading && !error && tasks.length === 0 && <EmptyState />}

@@ -1,18 +1,5 @@
 import type { Task } from '../../domain/entities/Task';
-import type { ITaskRepository } from '../../domain/repositories/ITaskRepository';
-import { updateTask } from '../../domain/entities/Task';
-
-interface UpdateTaskRequest {
-  id: string;
-  title?: string;
-  description?: string;
-  completed?: boolean;
-  starred?: boolean;
-  starredAt?: Date;
-  dueDate?: Date;
-  dueTime?: string;
-  order?: number;
-}
+import type { ITaskRepository, UpdateTaskRequest } from '../../domain/repositories/ITaskRepository';
 
 export class UpdateTaskUseCase {
   private taskRepository: ITaskRepository;
@@ -21,15 +8,13 @@ export class UpdateTaskUseCase {
     this.taskRepository = taskRepository;
   }
 
-  async execute(request: UpdateTaskRequest): Promise<Task> {
-    const existingTask = await this.taskRepository.getById(request.id);
+  async execute(id: string, updates: UpdateTaskRequest): Promise<Task> {
+    const existingTask = await this.taskRepository.getById(id);
 
     if (!existingTask) {
       throw new Error('Task not found');
     }
 
-    const updatedTask = updateTask(existingTask, request);
-
-    return this.taskRepository.update(updatedTask);
+    return this.taskRepository.update(id, updates);
   }
 }

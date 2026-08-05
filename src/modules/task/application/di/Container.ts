@@ -96,8 +96,9 @@ export class Container {
 
   static getDeleteTaskListUseCase(): DeleteTaskListUseCase {
     if (!Container.deleteTaskListUseCase) {
-      const repository = RepositoryFactory.getTaskListRepository();
-      Container.deleteTaskListUseCase = new DeleteTaskListUseCase(repository);
+      const taskListRepository = RepositoryFactory.getTaskListRepository();
+      const taskRepository = RepositoryFactory.getTaskRepository();
+      Container.deleteTaskListUseCase = new DeleteTaskListUseCase(taskListRepository, taskRepository);
     }
     return Container.deleteTaskListUseCase;
   }

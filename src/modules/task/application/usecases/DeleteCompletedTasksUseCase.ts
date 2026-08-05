@@ -8,8 +8,6 @@ export class DeleteCompletedTasksUseCase {
   }
 
   async execute(listId: string): Promise<void> {
-    await this.taskRepository.deleteByFilter(
-      (task) => task.completed && task.listId === listId
-    );
+    await this.taskRepository.deleteCompletedByListId(listId);
   }
 }

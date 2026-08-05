@@ -1,7 +1,14 @@
-import { MenuOutlined, QuestionCircleOutlined, AppstoreOutlined, UserOutlined } from '@ant-design/icons';
-import { Avatar, Space } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { CheckSquareOutlined } from '@ant-design/icons';
+import { Space } from 'antd';
+import { useAuth } from '../../modules/auth/presentation/hooks/useAuth';
 
 export function TopBar() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const initial = user?.name?.charAt(0).toUpperCase() || '?';
+
   return (
     <header style={{
       height: 64,
@@ -12,31 +19,41 @@ export function TopBar() {
       padding: '0 16px',
       borderBottom: '1px solid #3c4043',
     }}>
-      <Space size={16} align="center">
-        <MenuOutlined style={{ fontSize: 24, color: '#e8eaed', cursor: 'pointer' }} />
-        <div style={{
-          width: 32,
-          height: 32,
-          borderRadius: '50%',
-          backgroundColor: '#8ab4f8',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#202124',
-          fontWeight: 'bold',
-          fontSize: 14,
-        }}>
-          T
-        </div>
-        <span style={{ color: '#e8eaed', fontSize: 22, fontWeight: 400 }}>
+      <Space size={12} align="center">
+        <CheckSquareOutlined style={{ fontSize: 28, color: '#8ab4f8' }} />
+        <span style={{ color: '#e8eaed', fontSize: 22, fontWeight: 500 }}>
           Tarefas
         </span>
       </Space>
 
       <Space size={16} align="center">
-        <QuestionCircleOutlined style={{ fontSize: 20, color: '#9aa0a6', cursor: 'pointer' }} />
-        <AppstoreOutlined style={{ fontSize: 20, color: '#9aa0a6', cursor: 'pointer' }} />
-        <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#5f6368', cursor: 'pointer' }} />
+        <div
+          onClick={() => navigate('/profile')}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            backgroundColor: user?.photo ? 'transparent' : '#8ab4f8',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#171717',
+            fontWeight: 'bold',
+            fontSize: 16,
+            cursor: 'pointer',
+            overflow: 'hidden',
+          }}
+        >
+          {user?.photo ? (
+            <img
+              src={user.photo}
+              alt="Foto"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            initial
+          )}
+        </div>
       </Space>
     </header>
   );

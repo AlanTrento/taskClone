@@ -80,10 +80,11 @@ export const ScheduleRow = memo(function ScheduleRow({
     setModalOpen(false);
   };
 
-  const handleConfirm = () => {
-    if (tempValue) {
-      const dateOnly = tempValue.toDate();
-      const time = tempValue.format('HH:mm');
+  const handleConfirm = (value?: Dayjs) => {
+    const val = value || tempValue;
+    if (val) {
+      const dateOnly = val.toDate();
+      const time = val.format('HH:mm');
       onSetDateTime(dateOnly, time);
     }
     setModalOpen(false);
@@ -108,6 +109,7 @@ export const ScheduleRow = memo(function ScheduleRow({
         value={tempValue}
         onChange={(val) => setTempValue(val as Dayjs | null)}
         open
+        onOk={(value) => handleConfirm(value as Dayjs)}
         getPopupContainer={(trigger) => trigger.parentElement || document.body}
         panelRender={(panel) => <div className="schedule-datepicker-panel">{panel}</div>}
       />

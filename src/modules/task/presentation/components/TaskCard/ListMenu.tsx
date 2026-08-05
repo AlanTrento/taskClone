@@ -5,8 +5,8 @@ import type { SortOption } from '../../viewmodels/TasksViewModel';
 import { styles } from './ListMenu.styles';
 
 interface ListMenuProps {
+  listName?: string;
   sortOption: SortOption;
-  isDefaultList: boolean;
   onSort: (by: SortOption) => void;
   onRename: (name: string) => void;
   onDelete: () => void;
@@ -16,8 +16,8 @@ interface ListMenuProps {
 }
 
 export const ListMenu = memo(function ListMenu({
+  listName,
   sortOption,
-  isDefaultList,
   onSort,
   onRename,
   onDelete,
@@ -78,6 +78,7 @@ export const ListMenu = memo(function ListMenu({
         key="rename"
         icon={<EditOutlined />}
         onClick={() => {
+          setRenameValue(listName || '');
           setIsRenameModalOpen(true);
         }}
       >
@@ -88,12 +89,7 @@ export const ListMenu = memo(function ListMenu({
       <Menu.Item
         key="delete"
         icon={<DeleteOutlined />}
-        disabled={isDefaultList}
-        onClick={() => {
-          if (!isDefaultList) {
-            setIsDeleteModalOpen(true);
-          }
-        }}
+        onClick={() => setIsDeleteModalOpen(true)}
       >
         Excluir lista
       </Menu.Item>

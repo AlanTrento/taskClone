@@ -1,5 +1,5 @@
 import type { Task } from '../../domain/entities/Task';
-import type { ITaskRepository } from '../../domain/repositories/ITaskRepository';
+import type { ITaskRepository, CreateTaskRequest, UpdateTaskRequest } from '../../domain/repositories/ITaskRepository';
 
 const mockTasks: Task[] = [
   {
@@ -117,9 +117,21 @@ const mockTasks: Task[] = [
 export class MockTaskRepository implements ITaskRepository {
   private tasks: Task[] = [...mockTasks];
 
-  async getAll(): Promise<Task[]> {
+  async getAll(filters?: { listId?: string; completed?: boolean; starred?: boolean }): Promise<Task[]> {
     await this.delay();
-    return [...this.tasks];
+    let result = [...this.tasks];
+
+    if (filters?.listId) {
+      result = result.filter((task) => task.listId === filters.listId);
+    }
+    if (filters?.completed !== undefined) {
+      result = result.filter((task) => task.completed === filters.completed);
+    }
+    if (filters?.starred !== undefined) {
+      result = result.filter((task) => task.starred === filters.starred);
+    }
+
+    return result;
   }
 
   async getById(id: string): Promise<Task | null> {
@@ -127,19 +139,37 @@ export class MockTaskRepository implements ITaskRepository {
     return this.tasks.find((task) => task.id === id) || null;
   }
 
-  async create(task: Task): Promise<Task> {
+  async create(data: CreateTaskRequest): Promise<Task> {
     await this.delay();
-    this.tasks.push(task);
-    return task;
+    const now = new Date();
+    const maxOrder = this.tasks.reduce((max, t) => Math.max(max, t.order), -1);
+    const newTask: Task = {
+      id: crypto.randomUUID(),
+      title: data.title,
+      description: data.description,
+      completed: false,
+      starred: false,
+      listId: data.listId,
+      createdAt: now,
+      updatedAt: now,
+      order: data.order ?? maxOrder + 1,
+    };
+    this.tasks.push(newTask);
+    return newTask;
   }
 
-  async update(task: Task): Promise<Task> {
+  async update(id: string, updates: UpdateTaskRequest): Promise<Task> {
     await this.delay();
-    const index = this.tasks.findIndex((t) => t.id === task.id);
-    if (index !== -1) {
-      this.tasks[index] = task;
+    const index = this.tasks.findIndex((t) => t.id === id);
+    if (index === -1) {
+      throw new Error('Task not found');
     }
-    return task;
+    this.tasks[index] = {
+      ...this.tasks[index],
+      ...updates,
+      updatedAt: new Date(),
+    };
+    return this.tasks[index];
   }
 
   async delete(id: string): Promise<void> {
@@ -147,15 +177,20 @@ export class MockTaskRepository implements ITaskRepository {
     this.tasks = this.tasks.filter((task) => task.id !== id);
   }
 
-  async deleteByFilter(predicate: (task: Task) => boolean): Promise<void> {
+  async deleteCompletedByListId(listId: string): Promise<void> {
     await this.delay();
-    this.tasks = this.tasks.filter((task) => !predicate(task));
+    this.tasks = this.tasks.filter((task) => !(task.listId === listId && task.completed));
   }
 
-  async updateByFilter(predicate: (task: Task) => boolean, updates: Partial<Task>): Promise<void> {
+  async markOldAsCompleted(listId: string, olderThanDays: number = 30): Promise<void> {
     await this.delay();
-    this.tasks = this.tasks.map((task) => 
-      predicate(task) ? { ...task, ...updates, updatedAt: new Date() } : task
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - olderThanDays);
+
+    this.tasks = this.tasks.map((task) =>
+      task.listId === listId && !task.completed && task.createdAt < cutoff
+        ? { ...task, completed: true, updatedAt: new Date() }
+        : task
     );
   }
 

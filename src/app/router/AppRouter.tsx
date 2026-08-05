@@ -1,15 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { LoginPage } from '../../modules/auth/presentation/components/LoginPage';
+import { RegisterPage } from '../../modules/auth/presentation/components/RegisterPage';
+import { ProfilePage } from '../../modules/auth/presentation/components/ProfilePage';
+import { AuthGuard } from '../../modules/auth/presentation/components/AuthGuard';
+import App from '../../App';
 
 export function AppRouter() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<div>Página Principal</div>} />
-        <Route path="/tasks" element={<div>Tarefas</div>} />
-        <Route path="/tasks/starred" element={<div>Tarefas com Estrela</div>} />
-        <Route path="/lists/:listId" element={<div>Lista</div>} />
-        <Route path="*" element={<div>404 - Não Encontrado</div>} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/profile" element={<AuthGuard><ProfilePage /></AuthGuard>} />
+      <Route path="/" element={<AuthGuard><App /></AuthGuard>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

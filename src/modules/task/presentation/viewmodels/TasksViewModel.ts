@@ -1,5 +1,5 @@
 import type { Task } from '../../domain/entities/Task';
-import { createTask } from '../../domain/entities/Task';
+import type { ITaskRepository } from '../../domain/repositories/ITaskRepository';
 import type { GetTasksUseCase } from '../../application/usecases/GetTasksUseCase';
 import type { CreateTaskUseCase } from '../../application/usecases/CreateTaskUseCase';
 import type { UpdateTaskUseCase } from '../../application/usecases/UpdateTaskUseCase';
@@ -11,6 +11,7 @@ import { notificationService } from '../../../../shared/services/NotificationSer
 export type SortOption = 'order' | 'date' | 'dueDate' | 'starred' | 'title';
 
 export class TasksViewModel {
+  private taskRepository: ITaskRepository;
   private getTasksUseCase: GetTasksUseCase;
   private createTaskUseCase: CreateTaskUseCase;
   private updateTaskUseCase: UpdateTaskUseCase;
@@ -30,6 +31,7 @@ export class TasksViewModel {
   private _onErrorChanged: ((error: string | null) => void) | null = null;
 
   constructor(
+    taskRepository: ITaskRepository,
     getTasksUseCase: GetTasksUseCase,
     createTaskUseCase: CreateTaskUseCase,
     updateTaskUseCase: UpdateTaskUseCase,
@@ -37,6 +39,7 @@ export class TasksViewModel {
     deleteCompletedTasksUseCase: DeleteCompletedTasksUseCase,
     markOldTasksAsCompletedUseCase: MarkOldTasksAsCompletedUseCase,
   ) {
+    this.taskRepository = taskRepository;
     this.getTasksUseCase = getTasksUseCase;
     this.createTaskUseCase = createTaskUseCase;
     this.updateTaskUseCase = updateTaskUseCase;
@@ -77,12 +80,12 @@ export class TasksViewModel {
     this._onErrorChanged = callback;
   }
 
-  async loadTasks(): Promise<void> {
+  async loadTasks(filters?: { listId?: string; completed?: boolean; starred?: boolean }): Promise<void> {
     this.setLoading(true);
     this.setError(null);
 
     try {
-      this._allTasks = await this.getTasksUseCase.execute();
+      this._allTasks = await this.getTasksUseCase.execute(filters);
       this.scheduleNotificationsForTasks();
       this.applyFilter();
     } catch (err) {
@@ -111,31 +114,17 @@ export class TasksViewModel {
   async createTask(title: string, description?: string, listId?: string): Promise<void> {
     this.setError(null);
 
-    const newTask = createTask({
-      id: crypto.randomUUID(),
-      title,
-      description,
-      completed: false,
-      starred: false,
-      listId: listId || '1',
-      order: this._allTasks.length,
-    });
-
-    this._tasks = [newTask, ...this._tasks];
-    this._allTasks = [...this._allTasks, newTask];
-    this._onTasksChanged?.(this._tasks);
-
     try {
-      await this.createTaskUseCase.execute({
+      const newTask = await this.createTaskUseCase.execute({
         title,
         description,
         listId: listId || '1',
-        order: newTask.order,
       });
-    } catch (err) {
-      this._tasks = this._tasks.filter((t) => t.id !== newTask.id);
-      this._allTasks = this._allTasks.filter((t) => t.id !== newTask.id);
+
+      this._tasks = [newTask, ...this._tasks];
+      this._allTasks = [...this._allTasks, newTask];
       this._onTasksChanged?.(this._tasks);
+    } catch (err) {
       this.setError(err instanceof Error ? err.message : 'Erro ao criar tarefa');
     }
   }
@@ -154,16 +143,19 @@ export class TasksViewModel {
     this._onTasksChanged?.(this._tasks);
 
     try {
-      const updatedTask = await this.updateTaskUseCase.execute({ id, ...updates });
+      const updatedTask = await this.updateTaskUseCase.execute(id, updates);
       this._tasks = this._tasks.map((task) => (task.id === id ? updatedTask : task));
       this._allTasks = this._allTasks.map((task) => (task.id === id ? updatedTask : task));
 
-      if (updates.dueDate !== undefined) {
+      if (updates.dueDate !== undefined || updates.dueTime !== undefined || updates.completed !== undefined) {
         this.handleNotificationSchedule(updatedTask);
       }
 
       this._onTasksChanged?.(this._tasks);
     } catch (err) {
+      if (err instanceof Error && err.message === 'Task not found') {
+        return;
+      }
       this._tasks = previousTasks;
       this._allTasks = previousAllTasks;
       this._onTasksChanged?.(this._tasks);
@@ -182,6 +174,21 @@ export class TasksViewModel {
       this._onTasksChanged?.(this._tasks);
     } catch (err) {
       this.setError(err instanceof Error ? err.message : 'Erro ao excluir tarefa');
+    }
+  }
+
+  async deleteTasksByListId(listId: string): Promise<void> {
+    this.setError(null);
+
+    try {
+      const tasksToDelete = this._allTasks.filter((t) => t.listId === listId);
+      tasksToDelete.forEach((t) => notificationService.cancel(t.id));
+      await this.deleteCompletedTasksUseCase.execute(listId);
+      this._tasks = this._tasks.filter((t) => t.listId !== listId);
+      this._allTasks = this._allTasks.filter((t) => t.listId !== listId);
+      this._onTasksChanged?.(this._tasks);
+    } catch (err) {
+      this.setError(err instanceof Error ? err.message : 'Erro ao excluir tarefas da lista');
     }
   }
 
@@ -221,7 +228,7 @@ export class TasksViewModel {
     this.applyFilter();
 
     reorderedTasks.forEach((t) => {
-      this.updateTaskUseCase.execute({ id: t.id, order: t.order });
+      this.updateTaskUseCase.execute(t.id, { order: t.order });
     });
   }
 

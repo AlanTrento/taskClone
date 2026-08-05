@@ -1,8 +1,7 @@
 import type { TaskList } from '../../domain/entities/TaskList';
-import type { ITaskListRepository } from '../../domain/repositories/ITaskListRepository';
-import { updateTaskList } from '../../domain/entities/TaskList';
+import type { ITaskListRepository, UpdateTaskListRequest } from '../../domain/repositories/ITaskListRepository';
 
-interface UpdateTaskListRequest {
+interface UpdateTaskListUseCaseRequest {
   id: string;
   name?: string;
   color?: string;
@@ -16,15 +15,18 @@ export class UpdateTaskListUseCase {
     this.taskListRepository = taskListRepository;
   }
 
-  async execute(request: UpdateTaskListRequest): Promise<TaskList> {
+  async execute(request: UpdateTaskListUseCaseRequest): Promise<TaskList> {
     const existing = await this.taskListRepository.getById(request.id);
 
     if (!existing) {
       throw new Error('Task list not found');
     }
 
-    const updated = updateTaskList(existing, request);
+    const updates: UpdateTaskListRequest = {};
+    if (request.name !== undefined) updates.name = request.name;
+    if (request.color !== undefined) updates.color = request.color;
+    if (request.order !== undefined) updates.order = request.order;
 
-    return this.taskListRepository.update(updated);
+    return this.taskListRepository.update(request.id, updates);
   }
 }

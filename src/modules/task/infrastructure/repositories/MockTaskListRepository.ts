@@ -1,5 +1,5 @@
 import type { TaskList } from '../../domain/entities/TaskList';
-import type { ITaskListRepository } from '../../domain/repositories/ITaskListRepository';
+import type { ITaskListRepository, CreateTaskListRequest, UpdateTaskListRequest } from '../../domain/repositories/ITaskListRepository';
 
 const mockTaskLists: TaskList[] = [
   {
@@ -35,24 +35,40 @@ export class MockTaskListRepository implements ITaskListRepository {
     return this.taskLists.find((list) => list.id === id) || null;
   }
 
-  async create(taskList: TaskList): Promise<TaskList> {
+  async create(data: CreateTaskListRequest): Promise<TaskList> {
     await this.delay();
-    this.taskLists.push(taskList);
-    return taskList;
+    const maxOrder = this.taskLists.reduce((max, list) => Math.max(max, list.order), -1);
+    const newTaskList: TaskList = {
+      id: crypto.randomUUID(),
+      name: data.name,
+      color: data.color,
+      order: maxOrder + 1,
+    };
+    this.taskLists.push(newTaskList);
+    return newTaskList;
   }
 
-  async update(taskList: TaskList): Promise<TaskList> {
+  async update(id: string, updates: UpdateTaskListRequest): Promise<TaskList> {
     await this.delay();
-    const index = this.taskLists.findIndex((l) => l.id === taskList.id);
-    if (index !== -1) {
-      this.taskLists[index] = taskList;
+    const index = this.taskLists.findIndex((l) => l.id === id);
+    if (index === -1) {
+      throw new Error('Task list not found');
     }
-    return taskList;
+    this.taskLists[index] = {
+      ...this.taskLists[index],
+      ...updates,
+    };
+    return this.taskLists[index];
   }
 
   async delete(id: string): Promise<void> {
     await this.delay();
     this.taskLists = this.taskLists.filter((list) => list.id !== id);
+  }
+
+  async getMaxOrder(): Promise<number> {
+    await this.delay();
+    return this.taskLists.reduce((max, list) => Math.max(max, list.order), -1);
   }
 
   private delay(): Promise<void> {

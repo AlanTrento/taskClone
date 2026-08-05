@@ -48,14 +48,19 @@ export const TaskItem = memo(function TaskItem({
   const [detailsValue, setDetailsValue] = useState(description || '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const detailsValueRef = useRef(detailsValue);
+  detailsValueRef.current = detailsValue;
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
       if (isModalOpen) return;
+      if (isEditingDetails) {
+        onUpdateDetails?.(id, detailsValueRef.current);
+      }
       setIsExpanded(false);
       setIsEditingDetails(false);
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, isEditingDetails, id, onUpdateDetails]);
 
   useEffect(() => {
     if (isExpanded) {
@@ -144,6 +149,8 @@ export const TaskItem = memo(function TaskItem({
       aria-label={`Tarefa: ${title}${completed ? ' (concluída)' : ''}`}
       tabIndex={0}
       onKeyDown={(e) => {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === 'TEXTAREA' || tag === 'INPUT') return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           setIsExpanded(!isExpanded);
