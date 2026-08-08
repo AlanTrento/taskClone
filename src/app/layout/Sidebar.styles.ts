@@ -13,6 +13,7 @@ export const styles: Record<string, CSSProperties> = {
     padding: `${spacing.lg}px ${spacing.sm}px`,
     gap: spacing.xxl,
     overflowY: 'auto',
+    borderRight: '1px solid rgba(255, 255, 255, 0.06)',
   },
   nav: {
     display: 'flex',
@@ -73,5 +74,6 @@ export const styles: Record<string, CSSProperties> = {
 export const getMenuItemStyle = (isActive: boolean): CSSProperties => ({
   ...styles.menuItem,
   backgroundColor: isActive ? colors.primaryBlueDark : 'transparent',
-  color: isActive ? colors.textWhite : colors.textPrimary,
+  color: isActive ? colors.primaryBlue : colors.textPrimary,
+  transition: 'background-color 200ms ease, color 200ms ease',
 });

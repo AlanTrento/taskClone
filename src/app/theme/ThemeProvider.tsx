@@ -13,12 +13,16 @@ const darkTheme = {
     colorTextSecondary: colors.textSecondary,
     colorSuccess: colors.successGreen,
     borderRadius: 8,
-    fontFamily: "'Google Sans', Roboto, Arial, sans-serif",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
   components: {
     Button: {
       colorPrimary: colors.primaryBlue,
       algorithm: true,
+    },
+    Drawer: {
+      colorBgElevated: colors.backgroundElevated,
+      colorText: colors.textPrimary,
     },
     Menu: {
       colorItemBg: 'transparent',

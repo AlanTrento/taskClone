@@ -15,9 +15,7 @@ export const TaskCard = memo(function TaskCard({ children }: TaskCardProps) {
       className="task-card"
       style={{
         ...styles.container,
-        width: isTablet ? '100%' : 680,
-        minWidth: isTablet ? '100%' : 620,
-        maxWidth: isTablet ? '100%' : 720,
+        ...(isTablet ? styles.containerTablet : styles.containerDesktop),
       }}
     >
       {children}

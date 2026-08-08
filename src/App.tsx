@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppLayout } from './app/layout';
 import { TopBar } from './app/layout';
 import { Sidebar } from './app/layout';
@@ -12,6 +12,7 @@ import { ErrorState } from './modules/task/presentation/components/ErrorState';
 import { useTasks } from './modules/task/presentation/hooks/useTasks';
 import { useTaskLists } from './modules/task/presentation/hooks/useTaskLists';
 import type { SortOption } from './modules/task/presentation/viewmodels/TasksViewModel';
+import { styles } from './App.styles';
 
 function App() {
   const { 
@@ -21,6 +22,8 @@ function App() {
     deleteCompletedTasks, deleteTasksByListId, markOldTasksAsCompleted 
   } = useTasks();
   const { taskLists, activeListId, setActiveList, createTaskList, updateTaskList, deleteTaskList } = useTaskLists();
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const pendingTasks = useMemo(() => tasks.filter((t) => !t.completed), [tasks]);
   const completedTasks = useMemo(() => tasks.filter((t) => t.completed), [tasks]);
@@ -109,14 +112,20 @@ function App() {
     : activeList?.name || 'Minhas tarefas';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <TopBar />
-      <AppLayout sidebar={
-        <Sidebar
-          activeListId={activeListId}
-          starredCount={starredCount}
-          taskLists={taskLists}
-          onSelectList={setActiveList}
+    <div style={styles.rootContainer}>
+      <TopBar onMenuClick={() => setDrawerOpen(true)} />
+      <AppLayout 
+        drawerOpen={drawerOpen}
+        onDrawerClose={() => setDrawerOpen(false)}
+        sidebar={
+          <Sidebar
+            activeListId={activeListId}
+            starredCount={starredCount}
+            taskLists={taskLists}
+            onSelectList={(id) => {
+              setActiveList(id);
+              setDrawerOpen(false);
+            }}
           onCreateList={createTaskList}
           onConfirmDelete={handleDelete}
         />

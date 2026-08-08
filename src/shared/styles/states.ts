@@ -1,7 +1,7 @@
 export const hoverStates = {
-  background: '#232425',
-  backgroundLight: '#303134',
-  backgroundDark: '#3c4043',
+  background: 'rgba(255, 255, 255, 0.04)',
+  backgroundLight: 'rgba(255, 255, 255, 0.06)',
+  backgroundDark: 'rgba(255, 255, 255, 0.08)',
 } as const;
 
 export const focusStates = {
@@ -10,8 +10,8 @@ export const focusStates = {
 } as const;
 
 export const activeStates = {
-  background: '#0b57d0',
-  color: '#ffffff',
+  background: 'rgba(138, 180, 248, 0.15)',
+  color: '#8ab4f8',
 } as const;
 
 export const disabledStates = {
@@ -22,5 +22,5 @@ export const disabledStates = {
 export const transitions = {
   fast: '150ms ease',
   normal: '200ms ease',
-  slow: '300ms ease',
+  slow: '300ms ease-in-out',
 } as const;

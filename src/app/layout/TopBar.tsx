@@ -1,27 +1,37 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckSquareOutlined } from '@ant-design/icons';
+import { CheckSquareOutlined, MenuOutlined } from '@ant-design/icons';
 import { Space } from 'antd';
 import { useAuth } from '../../modules/auth/presentation/hooks/useAuth';
+import { useIsMobile } from '../../shared/hooks/useMediaQuery';
+import { styles } from './TopBar.styles';
 
-export function TopBar() {
+interface TopBarProps {
+  onMenuClick?: () => void;
+}
+
+export function TopBar({ onMenuClick }: TopBarProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
+  const [isAvatarHovered, setIsAvatarHovered] = useState(false);
 
   const initial = user?.name?.charAt(0).toUpperCase() || '?';
 
   return (
-    <header style={{
-      height: 64,
-      backgroundColor: '#202124',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 16px',
-      borderBottom: '1px solid #3c4043',
-    }}>
+    <header style={styles.header}>
       <Space size={12} align="center">
-        <CheckSquareOutlined style={{ fontSize: 28, color: '#8ab4f8' }} />
-        <span style={{ color: '#e8eaed', fontSize: 22, fontWeight: 500 }}>
+        {isMobile && (
+          <button
+            type="button"
+            onClick={onMenuClick}
+            style={styles.hamburgerButton}
+          >
+            <MenuOutlined />
+          </button>
+        )}
+        <CheckSquareOutlined style={styles.logoIcon} />
+        <span style={styles.logoText}>
           Tarefas
         </span>
       </Space>
@@ -29,29 +39,22 @@ export function TopBar() {
       <Space size={16} align="center">
         <div
           onClick={() => navigate('/profile')}
+          onMouseEnter={() => setIsAvatarHovered(true)}
+          onMouseLeave={() => setIsAvatarHovered(false)}
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
+            ...styles.avatar,
+            ...(isAvatarHovered ? styles.avatarHover : {}),
             backgroundColor: user?.photo ? 'transparent' : '#8ab4f8',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#171717',
-            fontWeight: 'bold',
-            fontSize: 16,
-            cursor: 'pointer',
-            overflow: 'hidden',
           }}
         >
           {user?.photo ? (
             <img
               src={user.photo}
               alt="Foto"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              style={styles.avatarImage}
             />
           ) : (
-            initial
+            <span style={styles.avatarInitial}>{initial}</span>
           )}
         </div>
       </Space>
